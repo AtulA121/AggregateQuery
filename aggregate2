@@ -1,0 +1,86 @@
+[
+  {
+    $unwind:
+      {
+        path: "$weeklyPayment",
+      },
+  },
+  {
+    $match: {
+      $and: [
+        {
+          "weeklyPayment.fromDate": {
+            $gte: new Date("2023-02-13T00:00:00.000+00:00"),
+          },
+        },
+        {
+          "weeklyPayment.toDate": {
+            $lte: new Date("2023-02-18T23:59:59.999+00:00"),
+          },
+        },
+        { "weeklyPayment.paymentStatus": 'inactive' },
+      ],
+    },
+  },
+  {
+    $group:
+     
+      {
+        _id: "$_id",
+        relationship: {
+          $first: "$relationship",
+        },
+        fullName: {
+          $first: "$fullName",
+        },
+        primaryPhoneNumber: {
+          $first: "$primaryPhoneNumber",
+        },
+        secondaryPhoneNumber: {
+          $first: "$secondaryPhoneNumber",
+        },
+        totalAmount: {
+          $first: "$totalAmount",
+        },
+        updatedAt: {
+          $first: "$updatedAt",
+        },
+        createdAt: {
+          $first: "$createdAt",
+        },
+        weeklyPayment: {
+          $push: "$weeklyPayment",
+        },
+       
+      },
+  },
+  {
+    $project:
+      
+      {
+        relationship: 1,
+        fullName: 1,
+        primaryPhoneNumber: 1,
+        secondaryPhoneNumber: 1,
+        totalAmount: 1,
+        updatedAt: 1,
+        createdAt: 1,
+        weeklyPayment: 1,
+      },
+  },
+  {
+          $lookup: {
+            from: "childrens",
+            foreignField: "clientId",
+            localField: "_id",
+            as: "childrens",
+          },
+        },
+        { $sort: { _id: -1 } },
+        {
+          $facet: {
+            metadata: [{ $count: "total" }],
+            data: [{ $skip: 0 }],
+          },
+        },
+]
